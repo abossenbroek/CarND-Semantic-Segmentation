@@ -34,7 +34,7 @@ def load_vgg(sess, vgg_path):
     vgg_layer4_out_tensor_name = 'layer4_out:0'
     vgg_layer7_out_tensor_name = 'layer7_out:0'
 
-    tf.save_model.loader.load(sess, [vgg_tag], vgg_path)
+    tf.saved_model.loader.load(sess, [vgg_tag], vgg_path)
     graph = tf.get_default_graph()
     image_input = graph.get_tensor_by_name(vgg_input_tensor_name)
     keep_prob = graph.get_tensor_by_name(vgg_keep_prob_tensor_name)
@@ -58,14 +58,21 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     # TODO: Implement function
     conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same',
                                 kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    output = tf.layers.conv2d_transpose(conv_1x1, num_classes, 4, 2,
+    layers4_lhs = tf.layers.conv2d_transpose(conv_1x1, num_classes, 4, 
+                                        strides=(2,2),
                                         padding='same',
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    output = tf.add(output, vgg_layer4_out)
-    output = tf.layers.conv2d_transpose(output, num_classes, 4, strides=(2, 2),
+    # Ensure our dimensions match in addition
+    layers4_rhs = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same',
+                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    output = tf.add(layers4_lhs, layers4_rhs)
+    layers3_lhs = tf.layers.conv2d_transpose(output, num_classes, 4, strides=(2, 2),
                                         padding='same',
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    output = tf.add(output, vgg_layer3_out)
+    
+    layers3_rhs = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same',
+                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    output = tf.add(layers3_lhs, layers3_rhs)
     output = tf.layers.conv2d_transpose(output, num_classes, 16, strides=(8, 8),
                                         padding='same',
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
@@ -85,8 +92,9 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     """
     # TODO: Implement function
     logits = tf.reshape(nn_last_layer, (-1, num_classes))
+    correct_label = tf.reshape(correct_label, (-1,num_classes))
     optimizer = tf.train.AdamOptimizer(1e-4)
-    cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, correct_label))
+    cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=correct_label, logits=logits))
     cross_entropy_loss += tf.losses.get_regularization_loss()
     train_op = optimizer.minimize(loss=cross_entropy_loss)
 
@@ -115,17 +123,11 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     sess.run(init)
 
     for step in range(epochs):
-        image, label = get_batches_fn(batch_size)
-        sess.run([train_op], feed_dict={input_image: image,
-                                      correct_label: label,
-                                      keep_prob: keep_prob,
-                                      learning_rate: learning_rate})
-        if step % display_step == 0 or step == 1:
-            loss = sess.run([cross_entropy_loss], feed_dict={input_image: image,
-                                                             correct_label: label,
-                                                             keep_prob: keep_prob,
-                                                             learning_rate: learning_rate})
-            print("Step %s,\tMinibatch loss=%s\t" % (step, loss))
+        for image, label in get_batches_fn(batch_size):
+            _, loss = sess.run([train_op, cross_entropy_loss], feed_dict={input_image: image,
+                correct_label: label,
+                keep_prob: 0})
+            print("Step {},\tMinibatch loss={:.4f}".format(step, loss))
 
 
 
