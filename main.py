@@ -4,6 +4,7 @@ import helper
 import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
+import time
 
 
 # Check TensorFlow Version
@@ -84,8 +85,10 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     """
     # TODO: Implement function
     logits = tf.reshape(nn_last_layer, (-1, num_classes))
-    train_op = tf.train.AdamOptimizer(1e-4)
-    cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, labels))
+    optimizer = tf.train.AdamOptimizer(1e-4)
+    cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, correct_label))
+    cross_entropy_loss += tf.losses.get_regularization_loss()
+    train_op = optimizer.minimize(loss=cross_entropy_loss)
 
     return logits, train_op, cross_entropy_loss
 tests.test_optimize(optimize)
@@ -107,7 +110,25 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param learning_rate: TF Placeholder for learning rate
     """
     # TODO: Implement function
-    pass
+    display_step = 100
+    init = tf.global_variables_initializer()
+    sess.run(init)
+
+    for step in range(epochs):
+        image, label = get_batches_fn(batch_size)
+        sess.run(train_op, feed_dict={input_image: image,
+                                      correct_label: label,
+                                      keep_prob: keep_prob,
+                                      learning_rate: learning_rate})
+        if step % display_step == 0 or step == 1:
+            loss = sess.run([cross_entropy_loss], feed_dict={input_image: image,
+                                      correct_label: label,
+                                      keep_prob: keep_prob,
+                                      learning_rate: learning_rate})
+            print("Step %s,\tMinibatch loss=%s\t" % (step, loss))
+
+
+
 tests.test_train_nn(train_nn)
 
 
