@@ -89,6 +89,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     return output
+
 tests.test_layers(layers)
 
 
@@ -129,7 +130,6 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param learning_rate: TF Placeholder for learning rate
     """
     # TODO: Implement function
-    display_step = 100
     init = tf.global_variables_initializer()
     sess.run(init)
 
@@ -137,8 +137,8 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         for image, label in get_batches_fn(batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss], feed_dict={input_image: image,
                 correct_label: label,
-                keep_prob: 0,
-                learning_rate: learning_rate})
+                keep_prob: 0.5,
+                learning_rate: 0.004})
             print("Step {},\tMinibatch loss={:.4f}".format(step, loss))
 
 
@@ -166,8 +166,8 @@ def run():
         # Create function to get batches
         get_batches_fn = helper.gen_batch_function(os.path.join(data_dir, 'data_road/training'), image_shape)
 
-        epochs = 50
-        batch_size = 5
+        epochs = 20
+        batch_size = 20
 
         # OPTIONAL: Augment Images for better results
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
