@@ -56,25 +56,41 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # TODO: Implement function
-    conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same',
+    conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 
+                                padding='same',
+                                kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                 kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     layers4_lhs = tf.layers.conv2d_transpose(conv_1x1, num_classes, 4, 
                                         strides=(2,2),
                                         padding='same',
+                                        kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     # Ensure our dimensions match in addition
-    layers4_rhs = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same',
-                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layers4_rhs = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 
+                                   padding='same',
+                                   kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                   kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     output = tf.add(layers4_lhs, layers4_rhs)
-    layers3_lhs = tf.layers.conv2d_transpose(output, num_classes, 4, strides=(2, 2),
+
+
+
+
+
+    layers3_lhs = tf.layers.conv2d_transpose(output, num_classes, 4,
+                                             strides=(2, 2),
+                                             padding='same',
+                                             kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                             kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+
+    layers3_rhs = tf.layers.conv2d(vgg_layer3_out, num_classes, 1,
+                                   padding='same',
+                                   kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                   kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer3_out = tf.add(layers3_lhs, layers3_rhs)
+    output = tf.layers.conv2d_transpose(layer3_out, num_classes, 16, 
+                                        strides=(8, 8),
                                         padding='same',
-                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    
-    layers3_rhs = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same',
-                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    output = tf.add(layers3_lhs, layers3_rhs)
-    output = tf.layers.conv2d_transpose(output, num_classes, 16, strides=(8, 8),
-                                        padding='same',
+                                        kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     return output
@@ -168,9 +184,10 @@ def run():
         image_input, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
 
         output = layers(layer3_out, layer4_out, layer7_out, num_classes)
+        
+        logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, num_classes)
 
         # TODO: Train NN using the train_nn function
-        logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, num_classes)
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, image_input,
                  correct_label, keep_prob, learning_rate)
 
