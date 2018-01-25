@@ -4,7 +4,6 @@ import helper
 import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
-import time
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -134,12 +133,17 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     sess.run(init)
 
     for step in range(epochs):
+        counter = 0
+        avg = 0.0
         for image, label in get_batches_fn(batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss], feed_dict={input_image: image,
                                                                           correct_label: label,
                                                                           keep_prob: 0.5,
                                                                           learning_rate: 0.004})
-            print("Step {},\tMinibatch loss={:.4f}".format(step, loss))
+            avg += loss
+            counter += 1
+        # Display the average loss of the current epoch.
+        print("##### Average cross entropy loss: {:.4}".format(avg / (1. * counter)))
 
 
 tests.test_train_nn(train_nn)
@@ -165,7 +169,7 @@ def run():
         # Create function to get batches
         get_batches_fn = helper.gen_batch_function(os.path.join(data_dir, 'data_road/training'), image_shape)
 
-        epochs = 20
+        epochs = 50
         batch_size = 20
 
         # OPTIONAL: Augment Images for better results
@@ -187,7 +191,7 @@ def run():
                  correct_label, keep_prob, learning_rate)
 
         # TODO: Save inference data using helper.save_inference_samples
-        helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
+        helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, image_input)
 
         # OPTIONAL: Apply the trained model to a video
 
