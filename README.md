@@ -44,7 +44,7 @@ By decreasing the dropout we get,
 
 However, increasing the dropout back to fifty percent and decreasing the learning rate leads to the best result as can be seen below,
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/lr0_0001_1.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/lr0_0001_3.png)
 
 So we conclude that despite an approximately 3 percent higher cross entropy the dropout rate of fifty leads to better results as long as the learning rate is reasonably low.
 
