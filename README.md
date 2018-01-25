@@ -1,66 +1,50 @@
 # Semantic Segmentation
 
+We perform a semantic segmentation of road versus non road. To achieve this we use a [fully convulotional neural network](https://arxiv.org/pdf/1605.06211.pdf). The architecture is based on the network developed by [Berkley researchers](https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf).
 
-## Learning Rate
-We initially tried a learning rate of 0.004. We noted that with this learning
-rate the first epoch would have an loss around 0.9. In the second epoch it
-would jump to 1.2 and subsequent epochs even higher before going down. To
-reduce this oscillation we reduced the learning rate to 0.001. This caused the
-initial epoch to have a slightly higher average error but subsequent epochs
-would consistently decrease.
+## Architecture
+The architecture leverages a pretrained model and builds on that to classify independent pixels to be road or not. As such we perform partial transfer learning by taking the pretrained [VGG network by Long, Shelhame, et al.](https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf). Since convolutional networks have the shortcoming that they do not store information location we need to introduce skip layers. This leads to the following design. First, we convert the output of the pretrained network to 1x1 convolutional layer. Next, we introduce skip layers on the fourth layer and the third layer of VGG. We transpose after each skip layer so that the ultimate output has the same dimensions as the initial input. Throughout the operations of the network we need to ensure that the right dimensions of the layers is obtained. We achieve this by simple convolutional layers.
 
-Learning rate of 0.001 and 50 epochs lead to a final cross entry loss of 0.1501
-Learning rate of 0.0005 and 80 epochs lead to a final cross entropy loss of
-0.1081.
+To improve the accuracy of the network we initialze the weights of each layer to random values of a normal distribution with standard deviation 0.01. In addition we introduce a L2 regularization on the layers to ensure that certain nodes in the neural network don't get too heigh weights.
 
-Epoch  149     Average cross entropy loss: 0.1168 at lr 0.0001
+As an optimizer we use [Adam Optimizer](https://arxiv.org/abs/1412.6980) with cross entropy as error metric. We found that the learning rate and drop out rate have a significant impact on accuracy of the algorithm.
 
-with learning rate 0.00005 and 292 epochs
-Epoch  292     Average cross entropy loss: 0.1247
+## Learning Rate and Drop Out Rate
+We initially tried a learning rate of 0.004 with drop out of fifty percent. We noted that with this learning rate the first epoch would have an loss around 0.9. In the second epoch it would jump to 1.2 and subsequent epochs even higher before going down. To reduce this oscillation we reduced the learning rate to 0.001. This caused the initial epoch to have a slightly higher average error but subsequent epochs would consistently decrease. This effect became even stronger with a learning rate of 0.0005 and 80 epochs. For this configuration we found a cross entropy loss of 10.81 percent.
 
+We dropped the learning rate to 0.0001 with 150 epochs and found an average cross entropy loss of 11.68 percent. We searched for even a lower loss by decreasing the drop out rate and increasing the number of epochs. The lowest we found is with 300 epochs and thrity percent drop out rate, with which we found an error of 7.21 percent.
 
-### Introduction
-In this project, you'll label the pixels of a road in images using a Fully Convolutional Network (FCN).
+We see that with a learning rate of 0.0005 the traffic sign doesn't get recognized as road but some sidewalk gets incorrectly classified.
 
-### Setup
-##### Frameworks and Packages
-Make sure you have the following is installed:
- - [Python 3](https://www.python.org/)
- - [TensorFlow](https://www.tensorflow.org/)
- - [NumPy](http://www.numpy.org/)
- - [SciPy](https://www.scipy.org/)
-##### Dataset
-Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0005_1.png)
 
-### Start
-##### Implement
-Implement the code in the `main.py` module indicated by the "TODO" comments.
-The comments indicated with "OPTIONAL" tag are not required to complete.
-##### Run
-Run the following command to run the project:
-```
-python main.py
-```
-**Note** If running this in Jupyter Notebook system messages, such as those regarding test status, may appear in the terminal rather than the notebook.
+This is not the case with a reduced dropout as we can see here,
 
-### Submission
-1. Ensure you've passed all the unit tests.
-2. Ensure you pass all points on [the rubric](https://review.udacity.com/#!/rubrics/989/view).
-3. Submit the following in a zip file.
- - `helper.py`
- - `main.py`
- - `project_tests.py`
- - Newest inference images from `runs` folder  (**all images from the most recent run**)
- 
- ### Tips
-- The link for the frozen `VGG16` model is hardcoded into `helper.py`.  The model can be found [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)
-- The model is not vanilla `VGG16`, but a fully convolutional version, which already contains the 1x1 convolutions to replace the fully connected layers. Please see this [forum post](https://discussions.udacity.com/t/here-is-some-advice-and-clarifications-about-the-semantic-segmentation-project/403100/8?u=subodh.malgonde) for more information.  A summary of additional points, follow. 
-- The original FCN-8s was trained in stages. The authors later uploaded a version that was trained all at once to their GitHub repo.  The version in the GitHub repo has one important difference: The outputs of pooling layers 3 and 4 are scaled before they are fed into the 1x1 convolutions.  As a result, some students have found that the model learns much better with the scaling layers included. The model may not converge substantially faster, but may reach a higher IoU and accuracy. 
-- When adding l2-regularization, setting a regularizer in the arguments of the `tf.layers` is not enough. Regularization loss terms must be manually added to your loss function. otherwise regularization is not implemented.
- 
-### Using GitHub and Creating Effective READMEs
-If you are unfamiliar with GitHub , Udacity has a brief [GitHub tutorial](http://blog.udacity.com/2015/06/a-beginners-git-github-tutorial.html) to get you started. Udacity also provides a more detailed free [course on git and GitHub](https://www.udacity.com/course/how-to-use-git-and-github--ud775).
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/dropout_1.png)
 
-To learn about REAMDE files and Markdown, Udacity provides a free [course on READMEs](https://www.udacity.com/courses/ud777), as well. 
+We see similar charateristics for an image with considerable amount of shadow. Here the network with learning rate of 0.0005 misses parts of the road,
 
-GitHub also provides a [tutorial](https://guides.github.com/features/mastering-markdown/) about creating Markdown files.
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0005_2.png)
+
+By decreasing the learning rate to 0.0001 we get better results as can be seen here,
+
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0001_2.png)
+
+The reduction of dropout leads to similar results but also wrongly classifies some parts of the road as can be seen here,
+
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/dropout_2.png)
+
+Finally we run investigate one of the hardest images we found. For this image the learning rate of 0.0005 is clearly inaccurate,
+
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0005_3.png)
+
+By decreasing the dropout we get,
+
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/dropout_3.png)
+
+However, increasing the dropout back to fifty percent and decreasing the learning rate leads to the best result as can be seen below,
+
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0001_1.png)
+
+So we conclude that despite an approximately 3 percent higher cross entropy the dropout rate of fifty leads to better results as long as the learning rate is reasonably low.
+
