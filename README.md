@@ -1,4 +1,24 @@
 # Semantic Segmentation
+
+
+## Learning Rate
+We initially tried a learning rate of 0.004. We noted that with this learning
+rate the first epoch would have an loss around 0.9. In the second epoch it
+would jump to 1.2 and subsequent epochs even higher before going down. To
+reduce this oscillation we reduced the learning rate to 0.001. This caused the
+initial epoch to have a slightly higher average error but subsequent epochs
+would consistently decrease.
+
+Learning rate of 0.001 and 50 epochs lead to a final cross entry loss of 0.1501
+Learning rate of 0.0005 and 80 epochs lead to a final cross entropy loss of
+0.1081.
+
+Epoch  149     Average cross entropy loss: 0.1168 at lr 0.0001
+
+with learning rate 0.00005 and 292 epochs
+Epoch  292     Average cross entropy loss: 0.1247
+
+
 ### Introduction
 In this project, you'll label the pixels of a road in images using a Fully Convolutional Network (FCN).
 
