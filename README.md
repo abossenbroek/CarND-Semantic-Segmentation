@@ -16,35 +16,35 @@ We dropped the learning rate to 0.0001 with 150 epochs and found an average cros
 
 We see that with a learning rate of 0.0005 the traffic sign doesn't get recognized as road but some sidewalk gets incorrectly classified.
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0005_1.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/lr0_0005_1.png)
 
 This is not the case with a reduced dropout as we can see here,
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/dropout_1.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/dropout_1.png)
 
 We see similar charateristics for an image with considerable amount of shadow. Here the network with learning rate of 0.0005 misses parts of the road,
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0005_2.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/lr0_0005_2.png)
 
 By decreasing the learning rate to 0.0001 we get better results as can be seen here,
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0001_2.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/lr0_0001_2.png)
 
 The reduction of dropout leads to similar results but also wrongly classifies some parts of the road as can be seen here,
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/dropout_2.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/dropout_2.png)
 
 Finally we run investigate one of the hardest images we found. For this image the learning rate of 0.0005 is clearly inaccurate,
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0005_3.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/lr0_0005_3.png)
 
 By decreasing the dropout we get,
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/dropout_3.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/dropout_3.png)
 
 However, increasing the dropout back to fifty percent and decreasing the learning rate leads to the best result as can be seen below,
 
-![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/img/lr0_0001_1.png)
+![image with traffic sign](https://raw.githubusercontent.com/abossenbroek/CarND-Semantic-Segmentation/master/img/lr0_0001_1.png)
 
 So we conclude that despite an approximately 3 percent higher cross entropy the dropout rate of fifty leads to better results as long as the learning rate is reasonably low.
 
